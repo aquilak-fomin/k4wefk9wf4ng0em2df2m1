@@ -377,7 +377,7 @@ def mainStart():
 ##        feedbackLabelText = StringVar()
 ##        feedbackLabel=Label(height=3, width=30, textvariable=feedbackLabelText,bg="azure",anchor='n', font=("Times", 16))
 ##        feedbackLabel.grid(row=0,column=0,columnspan=5)
-##        feedbackLabelText.set("Your feedback is realy important for us!\nThank you!")        
+##        feedbackLabelText.set("Your feedback is really important for us!\nThank you!")        
 ##        feedbackText=Text(height=15, width=45)
 ##        feedbackText.grid(row=1,column=0,columnspan=5)        
 ##        feedbackpostLabel=Label(bg="azure",text="Email(optional)").grid(row=2)
