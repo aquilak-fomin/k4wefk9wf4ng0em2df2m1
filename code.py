@@ -186,8 +186,8 @@ def movement(direction):
                 var=sql2("select roomname from player where id="+playerId)
                 #print(var[0], var[0]=="A1", var[0]=="D2",var[0]== "F3")
                 if var[0]=="A1" or var[0]=="D2" or var[0]== "F3":
-                    save()
-                    textText.set("I feel safe here")
+                    #save()
+                    #textText.set("I feel safe here")
                 hiddenText.set("")
                 cur.execute("update player set hidden=0 where id="+playerId)
                 cur.execute("update rooms set first_time='1' where name like'"+str(*var)[:1]+"%'")
@@ -346,118 +346,119 @@ def mainStart():
 
 
 
-def startMenu():
-    def menuStartButton():
-        menuStart("<Return>")
-    def feedback():
-        def sendFeedback():
-            global feedbackSended
-            feedbacklogin=feedbackloginInput.get("1.0","end-1c")
-            feedbackpw=feedbackpwInput.get("1.0","end-1c")
-            if sql2("select id from player where savename='"+feedbacklogin+"' and savepass='"+feedbackpw+"'")==[]:
-                feedbackLabelText.set("Wrong login or password!\nPlease try again!")
-            else:
-                sql="update player set feedback='"+feedbackText.get("1.0","end-1c")+"\n"+feedbackpostInput.get("1.0","end-1c")+"\
-                    ' where savename='"+feedbacklogin+"' and savepass='"+feedbackpw+"'"
-                cur.execute(sql)
-                cur.execute("commit")
-                feedbackSended=True
-                feedbackWindow.destroy()
-                startMenu()
-        def feedbackBackButton():
-            global feedbackSended
-            feedbackWindow.destroy()
-            feedbackSended=False
-            startMenu()
-            
-        startWindow.destroy()
-        feedbackWindow=Tk()
-        feedbackWindow.title("False Awakening/Feedback")
-        frame=Frame(height=455, width=460,bg="azure").grid(rowspan=40,columnspan=40)
-        feedbackLabelText = StringVar()
-        feedbackLabel=Label(height=3, width=30, textvariable=feedbackLabelText,bg="azure",anchor='n', font=("Times", 16))
-        feedbackLabel.grid(row=0,column=0,columnspan=5)
-        feedbackLabelText.set("Your feedback is realy important for us!\nThank you!")        
-        feedbackText=Text(height=15, width=45)
-        feedbackText.grid(row=1,column=0,columnspan=5)        
-        feedbackpostLabel=Label(bg="azure",text="Email(optional)").grid(row=2)
-        feedbackpostInput=Text(height=1,width=40,font=("Times", 12))
-        feedbackpostInput.grid(row=2,column=1,columnspan=4)
-        feedbackText.focus()
-        feedbacklogin=Label(text="Login",bg="azure", font=("Times", 16)).grid(row=3,column=0)
-        feedbackloginInput=Text(height=1,width=10, font=("Times", 16))
-        feedbackloginInput.grid(row=3, column=1)
-        feedbackpw=Label(text="Password",bg="azure", font=("Times", 12)).grid(row=3,column=2)
-        feedbackpwInput=Text(height=1,width=10, font=("Times", 16))
-        feedbackpwInput.grid(row=3, column=3)
-        backButton=Button(text="Back",height=2, width=5, command=feedbackBackButton, font=("Times", 20)).grid(row=4,column=0)
-        sendButton=Button(text="Send feedback!",height=2, width=23, command=sendFeedback, font=("Times", 20)).grid(row=4,column=1,columnspan=4)
-        
-        feedbackWindow.mainloop()
-        
-    def menuStart(event):
-        global playerId
-        loginValue=loginInput.get("1.0","end-1c")
-        loginInput.delete('1.0', END)
-        loginValue=loginValue.replace("\n","")
-        pwValue=pwInput.get("1.0","end-1c")
-        pwInput.delete('1.0', END)
-        pwValue=pwValue.replace("\n","")
-        if newPlayerCheck.get():
-            if loginValue=="" or pwValue=="":
-                startText.set("Empty fields!\nTry again!")
-            else:
-                try:
-                    cur.execute("insert into player (savename,savepass) values ('"+loginValue+"','"+pwValue+"')")
-                    answer=sql2("select max(id) from player")
-                    playerId=str(*answer)
-                    startWindow.destroy()
-                    cur.execute("commit")            
-                except:
-                    startText.set("Input login in use.\nPlease try another login!")
-
-        else:
-            answer=sql2("select id from player where savename='"+loginValue+"' and savepass='"+pwValue+"'")
-            if answer==[]:
-                startText.set("Wrong login or password!\nPlease try again!")
-                return
-            playerId=str(*answer)
-            startWindow.destroy()
-            load()
-
-    global feedbackSended
-    startWindow=Tk()
-    startWindow.title("False Awakening/Start Menu")
-    frame=Frame(height=270, width=485,bg="azure").grid(rowspan=40,columnspan=40)
-
-
-    startText = StringVar()
-    text=Label(height=8, width=40, textvariable=startText,anchor='n',bg="azure", font=("Times", 16)).grid(row=0,column=0,columnspan=5)
-    if feedbackSended:
-        startText.set("Feedback sended\nThank you very much!\n\n\n\n\nNow you can log in to game")
-    else:
-        startText.set("Welcome to \"False Awakening\"\n\nby Sergey Pritchin,\nAku Korhonen \nand Nico Behnen!\n\n\nPlease log in or sing up")
-
-    login=Label(text="Login",bg="azure", font=("Times", 12)).grid(row=1,column=0)
-    loginInput=Text(height=1, width=10, font=("Times", 16))
-    loginInput.grid(row=1, column=1)
-    loginInput.bind("<Return>", menuStart)
-    pw=Label(text="Password",bg="azure", font=("Times", 12)).grid(row=1,column=2)
-    pwInput=Text(height=1, width=10, font=("Times", 16))
-    pwInput.grid(row=1, column=3)
-    pwInput.bind("<Return>", menuStart)
-    loginButton=Button(text="Log in", font=("Times", 12),command=menuStartButton).grid(row=1,column=4)
-
-    newPlayerCheck=IntVar()
-    newPlayer=Checkbutton(text="I am a new player!",bg="azure",variable=newPlayerCheck).grid(row=3,column=0,columnspan=3)
-    emptyLabel=Label(height=1, width=40,bg="azure").grid(row=2,columnspan=4)
-    feedback=Button(text="Left feedback to developers", command=feedback).grid(row=3,column=3)
-
-    startWindow.mainloop()
+##def startMenu():
+##    def menuStartButton():
+##        menuStart("<Return>")
+##    def feedback():
+##        def sendFeedback():
+##            global feedbackSended
+##            feedbacklogin=feedbackloginInput.get("1.0","end-1c")
+##            feedbackpw=feedbackpwInput.get("1.0","end-1c")
+##            if sql2("select id from player where savename='"+feedbacklogin+"' and savepass='"+feedbackpw+"'")==[]:
+##                feedbackLabelText.set("Wrong login or password!\nPlease try again!")
+##            else:
+##                sql="update player set feedback='"+feedbackText.get("1.0","end-1c")+"\n"+feedbackpostInput.get("1.0","end-1c")+"\
+##                    ' where savename='"+feedbacklogin+"' and savepass='"+feedbackpw+"'"
+##                cur.execute(sql)
+##                cur.execute("commit")
+##                feedbackSended=True
+##                feedbackWindow.destroy()
+##                startMenu()
+##        def feedbackBackButton():
+##            global feedbackSended
+##            feedbackWindow.destroy()
+##            feedbackSended=False
+##            startMenu()
+##            
+##        startWindow.destroy()
+##        feedbackWindow=Tk()
+##        feedbackWindow.title("False Awakening/Feedback")
+##        frame=Frame(height=455, width=460,bg="azure").grid(rowspan=40,columnspan=40)
+##        feedbackLabelText = StringVar()
+##        feedbackLabel=Label(height=3, width=30, textvariable=feedbackLabelText,bg="azure",anchor='n', font=("Times", 16))
+##        feedbackLabel.grid(row=0,column=0,columnspan=5)
+##        feedbackLabelText.set("Your feedback is realy important for us!\nThank you!")        
+##        feedbackText=Text(height=15, width=45)
+##        feedbackText.grid(row=1,column=0,columnspan=5)        
+##        feedbackpostLabel=Label(bg="azure",text="Email(optional)").grid(row=2)
+##        feedbackpostInput=Text(height=1,width=40,font=("Times", 12))
+##        feedbackpostInput.grid(row=2,column=1,columnspan=4)
+##        feedbackText.focus()
+##        feedbacklogin=Label(text="Login",bg="azure", font=("Times", 16)).grid(row=3,column=0)
+##        feedbackloginInput=Text(height=1,width=10, font=("Times", 16))
+##        feedbackloginInput.grid(row=3, column=1)
+##        feedbackpw=Label(text="Password",bg="azure", font=("Times", 12)).grid(row=3,column=2)
+##        feedbackpwInput=Text(height=1,width=10, font=("Times", 16))
+##        feedbackpwInput.grid(row=3, column=3)
+##        backButton=Button(text="Back",height=2, width=5, command=feedbackBackButton, font=("Times", 20)).grid(row=4,column=0)
+##        sendButton=Button(text="Send feedback!",height=2, width=23, command=sendFeedback, font=("Times", 20)).grid(row=4,column=1,columnspan=4)
+##        
+##        feedbackWindow.mainloop()
+##        
+##    def menuStart(event):
+##        global playerId
+##        loginValue=loginInput.get("1.0","end-1c")
+##        loginInput.delete('1.0', END)
+##        loginValue=loginValue.replace("\n","")
+##        pwValue=pwInput.get("1.0","end-1c")
+##        pwInput.delete('1.0', END)
+##        pwValue=pwValue.replace("\n","")
+##        if newPlayerCheck.get():
+##            if loginValue=="" or pwValue=="":
+##                startText.set("Empty fields!\nTry again!")
+##            else:
+##                try:
+##                    cur.execute("insert into player (savename,savepass) values ('"+loginValue+"','"+pwValue+"')")
+##                    answer=sql2("select max(id) from player")
+##                    playerId=str(*answer)
+##                    startWindow.destroy()
+##                    cur.execute("commit")            
+##                except:
+##                    startText.set("Input login in use.\nPlease try another login!")
+##
+##        else:
+##            answer=sql2("select id from player where savename='"+loginValue+"' and savepass='"+pwValue+"'")
+##            if answer==[]:
+##                startText.set("Wrong login or password!\nPlease try again!")
+##                return
+##            playerId=str(*answer)
+##            startWindow.destroy()
+##            load()
+##
+##    global feedbackSended
+##    startWindow=Tk()
+##    startWindow.title("False Awakening/Start Menu")
+##    frame=Frame(height=270, width=485,bg="azure").grid(rowspan=40,columnspan=40)
+##
+##
+##    startText = StringVar()
+##    text=Label(height=8, width=40, textvariable=startText,anchor='n',bg="azure", font=("Times", 16)).grid(row=0,column=0,columnspan=5)
+##    if feedbackSended:
+##        startText.set("Feedback sended\nThank you very much!\n\n\n\n\nNow you can log in to game")
+##    else:
+##        startText.set("Welcome to \"False Awakening\"\n\nby Sergey Pritchin,\nAku Korhonen \nand Nico Behnen!\n\n\nPlease log in or sing up")
+##
+##    login=Label(text="Login",bg="azure", font=("Times", 12)).grid(row=1,column=0)
+##    loginInput=Text(height=1, width=10, font=("Times", 16))
+##    loginInput.grid(row=1, column=1)
+##    loginInput.bind("<Return>", menuStart)
+##    pw=Label(text="Password",bg="azure", font=("Times", 12)).grid(row=1,column=2)
+##    pwInput=Text(height=1, width=10, font=("Times", 16))
+##    pwInput.grid(row=1, column=3)
+##    pwInput.bind("<Return>", menuStart)
+##    loginButton=Button(text="Log in", font=("Times", 12),command=menuStartButton).grid(row=1,column=4)
+##
+##    newPlayerCheck=IntVar()
+##    newPlayer=Checkbutton(text="I am a new player!",bg="azure",variable=newPlayerCheck).grid(row=3,column=0,columnspan=3)
+##    emptyLabel=Label(height=1, width=40,bg="azure").grid(row=2,columnspan=4)
+##    feedback=Button(text="Left feedback to developers", command=feedback).grid(row=3,column=3)
+##
+##    startWindow.mainloop()
+playerId="33"
 
                     
 cur=db.cursor()
-startMenu()
+#startMenu()
 
 
 window = Tk()
