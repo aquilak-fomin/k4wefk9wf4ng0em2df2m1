@@ -36,8 +36,6 @@ def get (items):
 	 player.BigSlot, player.SmallSlot1, player.SmallSlot2, items.Id FROM items, player\
 	 WHERE player.RoomName = items.RoomName AND items.GetItem = 1 AND \
 	 items.Name = '" + str(items) + "' AND player.Id='"+str(playerId)+"'")
-	print(result)
-	print(items)
 
 	#If there are no items
 	if result == []:
@@ -70,7 +68,6 @@ def get (items):
 	#If every slot is full
 	else:
 		textText.set("I can't hold more items. #THIS SHOULDN'T BE VISIBLE#")
-
 
 #Handle using items
 def use (target):
