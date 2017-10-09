@@ -12,7 +12,7 @@ def sql2(statements):
     return [row[0] for row in array]
 
 
-def drop(item):
+def drop(item,toRoom):
     global playerId
     if item=="drop":
         textText.set("What I want to drop ?")
@@ -24,7 +24,8 @@ def drop(item):
                 del slots[x]
         if len(slots):
             cur.execute("update player set "+str(*slots.values())+"='0' where id="+playerId)
-            cur.execute("update items set roomname=(select roomname from player where id="+playerId+") where name ='"+str(*var)+"'")
+            if toRoom:
+                cur.execute("update items set roomname=(select roomname from player where id="+playerId+") where name ='"+item+"'")
         else:
             textText.set("I don't have it")
 
