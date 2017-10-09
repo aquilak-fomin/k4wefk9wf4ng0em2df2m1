@@ -140,7 +140,9 @@ def funcChoose(event):
     elif inputValue.count("examine") or inputValue.count("look"):
         texts(inputValue[len(inputValue)-index-1], "examine")        
     elif inputValue.count("drop"):
-        drop(inputValue[-1])
+        drop(inputValue[-1],1)
+    elif inputValue.count("throw"):
+        drop(inputValue[-1],0)
     elif inputValue.count("exit") or inputValue.count("quit") or inputValue.count("escape"):
         window.destroy()
     else:
