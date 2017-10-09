@@ -434,6 +434,26 @@ def mainStart():
 ##    startWindow.mainloop()
 playerId="33"
 
+#palauta oikean tekstin id string muodossa.  
+def textCode():
+    global playerId
+    rawcode=sql("select player.RoomName, player.hidden, rooms.counter, rooms.First_time, player.BigSlot, player.SmallSlot1,\
+                player.SmallSlot2 from player, rooms where player.Id=33 and rooms.Name=player.roomname")
+    code=""
+    for x in range(7):
+        code+=str(rawcode[0][x])+'.'
+    playerPlace=sql2("select roomname from player where id="+playerId)
+    otherCodes=sql("select id from texts where id like '"+str(*playerPlace)+".%'")
+    machCounter=[0,0,0]
+    for x in range(len(otherCodes)):
+        machs=0
+        for y in range(7):
+            if code[:y+1]==str(*otherCodes[x])[:y+1]:
+                machs+=1
+                machCounter[x]=machs
+        machCounter.append(0)
+    return str(*otherCodes[machCounter.index(max(machCounter))])
+
                     
 cur=db.cursor()
 #startMenu()
