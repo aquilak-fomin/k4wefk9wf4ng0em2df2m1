@@ -71,7 +71,9 @@ def get (items):
 #Handle using items
 def use (target):
 
-    sql = "SELECT items.Id, items.Name, items.UseItem, items.RoomName, player.RoomName, items.TextId FROM items, player WHERE smallslot1 = items.Id OR smallslot2 = items.Id OR bigslot = items.Id OR items.RoomName = player.RoomName;"
+    sql = "SELECT items.Id, items.Name, items.UseItem, items.RoomName, player.RoomName, items.TextId, items.UseFunction\
+            FROM items, player WHERE items.RoomName = player.RoomName AND player.Id = '"+playerId+"' \
+            OR (player.BigSlot = items.Id OR player.SmallSlot1 = items.Id OR player.SmallSlot2 = items.Id) And player.Id = '"+playerId+"';"
 	
     #execute the query
     cur.execute(sql)
@@ -83,21 +85,18 @@ def use (target):
     for item in result:
         if target in item:
             itemTuple = item
+
     #found target item    
     if len(itemTuple) > 0:
         #"item has a use
         if str(itemTuple[2]) != "None":
             #using in the right room
-            if (itemTuple[3] == itemTuple[4]):
-                #Get item use function attributes
-                sql = "SELECT items.UseFunction FROM items WHERE items.Name = '" + itemTuple[1] + "';"
-                cur.execute(sql)
-                result = cur.fetchall()
-                if result != []:
-                    func = result[0][0].split(", ")
+            if (itemTuple[2] == itemTuple[4]):
+                #Get item use function attributes and split after ,
+                func = str(itemTuple[6]).split(",")
                 if "sql" in func:
-                    #handle attributes containing sql functions
-                    sql = str(func)
+                    #handle attributes containing sql functions using the second element
+                    sql = str(func[1])
                     cur.execute(sql)
                     #Get item usage text
                     texts(itemTuple[5], "use")
@@ -110,16 +109,16 @@ def use (target):
             else:
                 if str(itemTuple[2]) == "None":
                     #item has no use
-                    print("I don't think I can use this at all!")
+                    textText.set("I don't think I can use this at all!")
                 else:
                     #using item in the wrong room
-                    print("I can't use that here!")
+                    textText.set("I can't use that here!")
         else:
             #item has no use
-            print("I don't think I can use this at all!")
+            textText.set("I don't think I can use this at all!")
     else:
         #player doesn't have access to the target item
-        print("I can't find that item!")
+        textText.set("I can't find that item!")
 
 
 def funcChoose(event):
@@ -205,21 +204,15 @@ def movement(direction):
 
 #Prints out the current rooms description or if target if given then prints out targets description
 def texts(target, action):
-
-    target = str(target)
-    action = str(action)
-    
     #if target is not 'Room' gets target items texts
     if target not in ["examine", "look"]:
         #Get item.Id to query the texts
         sql = "SELECT items.TextId FROM items, player WHERE items.Name LIKE '" + target + "%' AND (items.RoomName = player.RoomName OR items.RoomName = NULL);"
         cur.execute(sql)
         newTarget = cur.fetchall()
-
         #if a item id was found set it as target
         if newTarget != []:
             target = str(*newTarget[0])
-
         #check if item is furniture and if so get room suffix
         sql = "SELECT RoomName FROM items WHERE TextId = '" + target + "' AND Type = 1;"
         cur.execute(sql)
@@ -227,21 +220,18 @@ def texts(target, action):
         #if item is furniture and if so add room suffix
         if newAction != [] and action == "examine":
             if str(newAction[0][0]) != "None":
-               action = action + newAction[0][0]
-        
+               action = action + newAction[0][0]      
     else:
         #Target is not an item so the room examine will be printed
         sql = "SELECT RoomName FROM player where Id='"+playerId+"';"
         cur.execute(sql)
         roomName = cur.fetchall()
         target = str(roomName[0][0])
-
     if target != "":
         #sql query to get text with id and subId
         sql = "SELECT Text, BigText FROM texts WHERE id = '" + target + "' AND SubId = '" + action + "';"
         cur.execute(sql)
         textPrint = cur.fetchall()
-
         #print appropriate text or bigText if one is found
         if textPrint != []:
             if str(textPrint[0][0]) != "None":
@@ -253,8 +243,7 @@ def texts(target, action):
             if target in allItems:
                 textText.set("A usual "+target+". Nothing special.")
             else:
-                textText.set("Look what ?")
-        
+                textText.set("Look what ?")    
     else:
         #read text below
         textText.set("Something went wrong")
