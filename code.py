@@ -30,43 +30,47 @@ def drop(item):
 
 
 def get (items):
-	
-	result = sql("SELECT items.Name, items.RoomName, items.Type, items.GetItem, player.RoomName,\
+
+	global playerId
+	result = sql("SELECT items.Type,\
 	 player.BigSlot, player.SmallSlot1, player.SmallSlot2, items.Id FROM items, player\
 	 WHERE player.RoomName = items.RoomName AND items.GetItem = 1 AND \
-	 items.Name = '" + str(items + "'"))
+	 items.Name = '" + str(items) + "' AND player.Id='"+str(playerId)+"'")
+	print(result)
+	print(items)
 
 	#If there are no items
 	if result == []:
 		textText.set("I can't see the " + str(items) + " anywhere.")
 
 	#If the item is big
-	elif result[0][2] == 1:
+	elif result[0][0] == 1:
 		#Checks item slot
-		if result[0][5] == 0:
+		if result[0][1] == 0:
 			cur.execute("UPDATE items SET items.RoomName = NULL WHERE items.Name = '" + str(items) + "'")
-			cur.execute("UPDATE player SET player.BigSlot = '" + str(result[0][8]) + "'")
+			cur.execute("UPDATE player SET player.BigSlot = '" + str(result[0][4]) + "'")
 		else:
 			textText.set("I can't take that item right now")
 
 	#If the item is small
-	elif result[0][2] == 0:
+	elif result[0][0] == 0:
 		#Checks item slots
-		if result[0][6] == 0:
+		if result[0][2] == 0:
 			cur.execute("UPDATE items SET items.RoomName = NULL WHERE items.Name = '" + str(items) + "'")
-			cur.execute("UPDATE player SET player.SmallSlot1 = '" + str(result[0][8]) + "'")
-		elif result[0][7] == 0:
+			cur.execute("UPDATE player SET player.SmallSlot1 = '" + str(result[0][4]) + "'")
+		elif result[0][3] == 0:
 			cur.execute("UPDATE items SET items.RoomName = NULL WHERE items.Name = '" + str(items) + "'")
-			cur.execute("UPDATE player SET player.SmallSlot2 = '" + str(result[0][8]) + "'")
-		elif result [0][5] == 0:
+			cur.execute("UPDATE player SET player.SmallSlot2 = '" + str(result[0][4]) + "'")
+		elif result [0][1] == 0:
 			cur.execute("UPDATE items SET items.RoomName = NULL WHERE items.Name = '" + str(items) + "'")
-			cur.execute("UPDATE player SET player.BigSlot = '" + str(result[0][8]) + "'")
+			cur.execute("UPDATE player SET player.BigSlot = '" + str(result[0][4]) + "'")
 		else:
 			textText.set("I can't hold more items.")
 
 	#If every slot is full
 	else:
 		textText.set("I can't hold more items. #THIS SHOULDN'T BE VISIBLE#")
+
 
 #Handle using items
 def use (target):
