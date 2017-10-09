@@ -68,7 +68,6 @@ def get (items):
 	else:
 		textText.set("I can't hold more items. #THIS SHOULDN'T BE VISIBLE#")
 
-
 #Handle using items
 def use (target):
 
@@ -78,47 +77,36 @@ def use (target):
     cur.execute(sql)
     #get the query result
     result = cur.fetchall()
-
     #initialize new tuple
     itemTuple = ()
 
     for item in result:
         if target in item:
             itemTuple = item
-        
+    #found target item    
     if len(itemTuple) > 0:
-        #found target item
+        #"item has a use
         if str(itemTuple[2]) != "None":
-            #"item has a use
+            #using in the right room
             if (itemTuple[3] == itemTuple[4]):
-                #using in the right room
-                
                 #Get item use function attributes
                 sql = "SELECT items.UseFunction FROM items WHERE items.Name = '" + itemTuple[1] + "';"
                 cur.execute(sql)
                 result = cur.fetchall()
-
                 if result != []:
                     func = result[0][0].split(", ")
-
                 if "sql" in func:
-
                     #handle attributes containing sql functions
                     sql = str(func)
                     cur.execute(sql)
-
                     #Get item usage text
                     texts(itemTuple[5], "use")
-                    
                 else:
                     #Send use info for unqiue situations
                     texts(itemTuple[5], "use")
-                
             elif itemTuple[2] == "ALL":
-
                 #Get item usage text
                 texts(itemTuple[5], "use")
-                
             else:
                 if str(itemTuple[2]) == "None":
                     #item has no use
@@ -129,7 +117,6 @@ def use (target):
         else:
             #item has no use
             print("I don't think I can use this at all!")
-
     else:
         #player doesn't have access to the target item
         print("I can't find that item!")
@@ -223,7 +210,7 @@ def texts(target, action):
     action = str(action)
     
     #if target is not 'Room' gets target items texts
-    if target != "Room":
+    if target not in ["examine", "look"]:
         #Get item.Id to query the texts
         sql = "SELECT items.TextId FROM items, player WHERE items.Name LIKE '" + target + "%' AND (items.RoomName = player.RoomName OR items.RoomName = NULL);"
         cur.execute(sql)
@@ -235,10 +222,8 @@ def texts(target, action):
 
         #check if item is furniture and if so get room suffix
         sql = "SELECT RoomName FROM items WHERE TextId = '" + target + "' AND Type = 1;"
-
         cur.execute(sql)
         newAction = cur.fetchall()
-
         #if item is furniture and if so add room suffix
         if newAction != [] and action == "examine":
             if str(newAction[0][0]) != "None":
@@ -246,7 +231,7 @@ def texts(target, action):
         
     else:
         #Target is not an item so the room examine will be printed
-        sql = "SELECT rooms.Name FROM rooms, player WHERE rooms.Name = player.RoomName;"
+        sql = "SELECT RoomName FROM player where Id='"+playerId+"';"
         cur.execute(sql)
         roomName = cur.fetchall()
         target = str(roomName[0][0])
@@ -273,7 +258,7 @@ def texts(target, action):
     else:
         #read text below
         textText.set("Something went wrong")
-
+        
 def hidden():
     roomItems=sql2("select name from items where roomname=(select roomname from player where id="+playerId+")")
     if "Bed" in roomItems or "Cupboard" in roomItems or "Desk" in roomItems or "Caretaker's Table" in roomItems:
@@ -377,7 +362,7 @@ def mainStart():
 ##        feedbackLabelText = StringVar()
 ##        feedbackLabel=Label(height=3, width=30, textvariable=feedbackLabelText,bg="azure",anchor='n', font=("Times", 16))
 ##        feedbackLabel.grid(row=0,column=0,columnspan=5)
-##        feedbackLabelText.set("Your feedback is really important for us!\nThank you!")        
+##        feedbackLabelText.set("Your feedback is realy important for us!\nThank you!")        
 ##        feedbackText=Text(height=15, width=45)
 ##        feedbackText.grid(row=1,column=0,columnspan=5)        
 ##        feedbackpostLabel=Label(bg="azure",text="Email(optional)").grid(row=2)
