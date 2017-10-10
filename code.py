@@ -1,6 +1,11 @@
 playerId=""
 feedbackSended=False
 
+#Set global list
+#define known actions
+global knownActions
+knownActions = ["examine", "look", "use", "push", "get", "take", "pick", "drop", "put", "place", "throw"]
+
 def sql(statements):
     cur.execute(statements)
     return cur.fetchall()
@@ -69,13 +74,14 @@ def get (items):
 	#If every slot is full
 	else:
 		textText.set("I can't hold more items. #THIS SHOULDN'T BE VISIBLE#")
-
 #Handle using items
 def use (target):
 
-    sql = "SELECT items.Id, items.Name, items.UseItem, items.RoomName, player.RoomName, items.TextId, items.UseFunction\
-            FROM items, player WHERE items.RoomName = player.RoomName AND player.Id = '"+playerId+"' \
-            OR (player.BigSlot = items.Id OR player.SmallSlot1 = items.Id OR player.SmallSlot2 = items.Id) And player.Id = '"+playerId+"';"
+    sql = "SELECT items.Id, items.Name, items.UseItem, items.RoomName, player.RoomName, items.TextId,\
+        items.UseFunction FROM items, player WHERE (items.RoomName = player.RoomName \
+        AND player.Id = '"+playerId+"' OR (player.BigSlot = items.Id \
+        OR player.SmallSlot1 = items.Id OR player.SmallSlot2 = items.Id) And player.Id = '"+playerId+"')\
+        AND items.Name = '"+target+"';"
 	
     #execute the query
     cur.execute(sql)
@@ -83,11 +89,9 @@ def use (target):
     result = cur.fetchall()
     #initialize new tuple
     itemTuple = ()
-
-    for item in result:
-        if target in item:
-            itemTuple = item
-
+    #attempt to split item usage rooms into multiples
+    if result != []:
+        itemTuple = result[0]
     #found target item    
     if len(itemTuple) > 0:
         #"item has a use
@@ -99,7 +103,7 @@ def use (target):
                 if "sql" in func:
                     #handle attributes containing sql functions using the second element
                     sql = str(func[1])
-                    cur.execute(sql)
+                    cur.execute(sql)                    
                     #Get item usage text
                     texts(itemTuple[5], "use")
                 else:
@@ -127,27 +131,53 @@ def funcChoose(event):
     inputValue=textBox.get("1.0","end-1c")
     textBox.delete('1.0', END)
     inputValue=inputValue.replace("\n","")
-    #inputValue=inputValue.lower()
-    index=0
+    inputValue=inputValue.strip(' ')
+    inputValue=inputValue.lower()
     inputValue=inputValue.split(" ")
-    if inputValue.count("from"):
-        index = inputValue.index("from")
-    if inputValue.count("wait"):
-        counter+=1
-    if inputValue.count("get") or inputValue.count("take"):
-        get(inputValue[len(inputValue)-index-1])
-    elif inputValue.count("use"):
-        use(inputValue[len(inputValue)-index-1])
-    elif inputValue.count("examine") or inputValue.count("look"):
-        texts(inputValue[len(inputValue)-index-1], "examine")        
-    elif inputValue.count("drop"):
-        drop(inputValue[-1],1)
-    elif inputValue.count("throw"):
-        drop(inputValue[-1],0)
-    elif inputValue.count("exit") or inputValue.count("quit") or inputValue.count("escape"):
-        window.destroy()
+    #index = 0
+    foundActions = []
+    foundItems = []
+    #Search for known words
+    for word in inputValue:
+        if word in knownActions:
+            foundActions.append(word)   
+    for word in inputValue:
+        knownItems = sql("SELECT DISTINCT items.Name \
+                        FROM items, player \
+                        WHERE items.Name LIKE '%"+word+"%' \
+                        AND (items.RoomName = (SELECT RoomName FROM player WHERE Id = '"+playerId+"') \
+                        OR items.Id = player.BigSlot \
+                        OR items.Id = player.SmallSlot1 \
+                        OR items.Id = player.SmallSlot2);")
+        if len(knownItems) == 1:
+            foundItems.append(*knownItems)
+        elif len(knownItems) > 1:
+            textText.set("which one?")
+    #Send first found action and item forward
+    if foundActions == [] and foundItems == []:
+        textText.set("No recognized words in input")
+    elif foundActions != [] and foundItems != []:
+        if foundActions[0] in ["use"]:
+            use(str(*foundItems[0]))
+        elif foundActions[0] in ["examine", "look"]:
+            texts(str(*foundItems[0]), "examine")
+        elif foundActions[0] in ["get", "take", "pick"]:
+            get(str(*foundItems[0]))
+        elif foundActions[0] in ["drop"]:
+            drop(str(*foundItems[0]))
+    #Handle faound action with no item   
+    elif len(foundActions) != [] and foundItems == []:
+        #Handle just examine
+        if foundActions[0] in ["examine", "look"] and foundItems == []:
+            texts("", "examine")
+        else:
+            textText.set(foundActions[0] + " what?")
+    #Handle found item with no action
+    elif len(foundActions) == [] and len(foundItems) != []:
+        textText.set("Do what with the " + str(*foundItems[0]))
+    #Failsafe for fail input
     else:
-        textText.set("What shall I do ?")
+        textText.set("What shoud i do?")
     showItems()
 
 
