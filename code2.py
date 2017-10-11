@@ -161,17 +161,68 @@ def use (target):
         global counter
         counter+=1
 
-
+def parser(inputValue):
+    #take the raw input and parse it then return it to funcChoose
+    inputValue=inputValue.strip(' ')
+    inputValue=inputValue.lower()
+    inputValue=inputValue.split(" ")
+    foundActions = []
+    foundItems = []
+    output = []
+    #Search for known words
+    for word in inputValue:
+        if word in knownActions:
+            foundActions.append(word)   
+    for word in inputValue:
+        #Get all distinct item names LIKE word, limit search to the current room,
+        #the items the player has with them and that the item name is at most
+        #twice the input length to avoid partial words from giving a result
+        knownItems = sql("SELECT DISTINCT items.Name \
+                        FROM items, player \
+                        WHERE items.Name LIKE '"+word+"%' \
+                        AND LENGTH(items.Name) < "+str(len(word)*2)+" \
+                        AND (items.RoomName = (SELECT RoomName FROM player WHERE Id = '"+playerId+"') \
+                        OR items.Id = player.BigSlot \
+                        OR items.Id = player.SmallSlot1 \
+                        OR items.Id = player.SmallSlot2);")
+        #if no found items append found item
+        if len(knownItems) != 1:
+            foundItems.append(knownItems)
+    output = [str(foundActions[0]), str(*foundItems[0][0])]
+    if len(*foundItems) == 1:
+        #Send first found action and item forward
+        if foundActions == [] and foundItems == []:
+            textText.set("I didn't understand that")
+        elif foundActions != [] and foundItems != []:
+            return(output)
+        #Handle found action with no item   
+        elif foundActions != [] and foundItems == []:
+            textText.set(foundActions[0] + " what?")
+        #Handle found item with no action
+        elif foundActions == [] and foundItems != []:
+            textText.set("Do what with the " + str(*foundItems[0][0]))
+        #Failsafe for failed input
+        else:
+            textText.set("What should i do?")
+    elif len(*foundItems) > 1:
+        #found too many items must be more accurate
+        textText.set("which one?")
+        return([""])
+    else:
+        #found no items
+        return([""])
+        
 def funcChoose(event):
     global counter
     counter=counter-1
     global textToPrint
     textToPrint=""
     allCodeTexts()
-    inputValue=textBox.get("1.0","end-1c")
+    inputRaw=textBox.get("1.0","end-1c")
     textBox.delete('1.0', END)
-    inputValue=inputValue.replace("\n","")
-    #inputValue=inputValue.lower()
+    inputRaw=inputRaw.replace("\n","")
+    #Take input raw and send it to the parser
+    inputValue = parser(inputRaw)
     index=0
     inputValue=inputValue.split(" ")
     if inputValue.count("from"):
