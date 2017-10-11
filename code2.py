@@ -48,6 +48,8 @@ def drop(item,toRoom):
                 cur.execute("update items set roomname=(select roomname from player where id="+playerId+") where name ='"+item+"'")
         else:
             textToPrint+="\nI don't have it"
+            global counter
+            counter+=1
 
 
 def get (items):
@@ -85,6 +87,8 @@ def get (items):
             cur.execute("UPDATE player SET player.BigSlot = '" + str(result[0][4]) + "'")
         else:
             textToPrint+="\nI can't hold more items."
+            global counter 
+            counter+=1
     #If every slot is full
     else:
             textToPrint+="\nI can't hold more items. #THIS SHOULDN'T BE VISIBLE#"
@@ -154,9 +158,13 @@ def use (target):
     else:
         #player doesn't have access to the target item
         textToPrint+="\nI can't find that item!"
+        global counter
+        counter+=1
 
 
 def funcChoose(event):
+    global counter
+    counter=counter-1
     global textToPrint
     textToPrint=""
     allCodeTexts()
@@ -190,8 +198,10 @@ def funcChoose(event):
         window.destroy()
     else:
         textToPrint+="\nWhat shall I do ?"
+        counter+=1
     showItems()
     textText.set(textToPrint)
+    sql("UPDATE rooms SET counter='"+srt(counter)+"' WHERE player.roomName=rooms.Name")
 
 
 
@@ -216,6 +226,8 @@ def movement(direction):
         if direction!="":
             if int(*sql2("select counter from rooms where name=(select "+direction+" from rooms where name=\""+str(*var)+"\")"))==100:
                 textToPrint+="It's locked!\n"
+                global counter
+                counter+=1
             else:
                 cur.execute("update player SET RoomName=(select "+direction+" from rooms where name=\""+str(*var)+"\") where id="+playerId)
                 #alltexts("room","examine")
@@ -418,6 +430,8 @@ def hidden():
     else:
         textToPrint+="\nI don't see any hidden place."
     textText.set(textToPrint)
+    global counter
+    counter+=1
 
         
 def save():
