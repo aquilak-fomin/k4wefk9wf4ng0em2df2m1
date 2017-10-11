@@ -209,7 +209,7 @@ def parser(inputValue):
             textText.set(foundActions[0] + " what?")
         #Handle found item with no action
         elif foundActions == [] and foundItems != []:
-            textText.set("Do what with the " + str(*foundItems[0][0]))
+            textText.set("Do what with the " + str(*foundItems[0]))
         #Failsafe for failed input
         else:
             textText.set("What should i do?")
