@@ -228,7 +228,7 @@ def funcChoose(event):
     global textToPrint
     textToPrint=""
     allCodeTexts()
-       inputRaw=textBox.get("1.0","end-1c")
+    inputRaw=textBox.get("1.0","end-1c")
     textBox.delete('1.0', END)
     inputRaw=inputRaw.replace("\n","")
     #Take input raw and send it to the parser
