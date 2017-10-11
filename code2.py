@@ -194,6 +194,8 @@ def parser(inputValue):
         #if no found items append found item
         if len(knownItems) == 1:
             foundItems.append(*knownItems)
+        elif foundActions.count("wait") and foundItems == []:
+            foundItems.append([""])
     if (foundActions.count("examine") or foundActions.count("look")) and (foundItems == [] or inputValue.count("room")):
         foundItems.append(["room"])
     #print(str(foundActions[0]))
